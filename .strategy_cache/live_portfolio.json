@@ -1,20 +1,11 @@
 {
   "positions": {
-    "000725": {
-      "name": "京东方A",
-      "entry_price": 8.38,
-      "entry_date": "2026-07-05",
-      "days_held": 7,
-      "highest": 8.38,
-      "entry_rank": 1,
-      "entry_score": 1.730534928697016
-    },
     "600276": {
       "name": "恒瑞医药",
       "entry_price": 54.45,
       "entry_date": "2026-07-05",
-      "days_held": 7,
-      "highest": 54.45,
+      "days_held": 8,
+      "highest": 56.77,
       "entry_rank": 2,
       "entry_score": 1.4818974695775313
     },
@@ -22,8 +13,8 @@
       "name": "牧原股份",
       "entry_price": 36.9,
       "entry_date": "2026-07-05",
-      "days_held": 7,
-      "highest": 36.9,
+      "days_held": 8,
+      "highest": 38.68,
       "entry_rank": 3,
       "entry_score": 1.1156047305989414
     },
@@ -31,10 +22,19 @@
       "name": "中信证券",
       "entry_price": 28.95,
       "entry_date": "2026-07-05",
-      "days_held": 7,
-      "highest": 28.95,
+      "days_held": 8,
+      "highest": 29.23,
       "entry_rank": 4,
       "entry_score": 1.070501651858779
+    },
+    "000725": {
+      "name": "京东方A",
+      "entry_price": 7.76,
+      "entry_date": "2026-07-07",
+      "days_held": 0,
+      "highest": 7.76,
+      "entry_rank": 3,
+      "entry_score": 1.1225042528777849
     }
   },
   "trade_log": [
@@ -73,6 +73,26 @@
       "price": 28.95,
       "score": 1.070501651858779,
       "rank": 4
+    },
+    {
+      "date": "2026-07-07",
+      "action": "SELL",
+      "code": "000725",
+      "name": "京东方A",
+      "entry_price": 8.38,
+      "exit_price": 7.76,
+      "profit_pct": -7.398568019093088,
+      "reason": "硬止损(-7.4%)",
+      "days_held": 8
+    },
+    {
+      "date": "2026-07-07",
+      "action": "BUY",
+      "code": "000725",
+      "name": "京东方A",
+      "price": 7.76,
+      "score": 1.1225042528777849,
+      "rank": 3
     }
   ]
 }
