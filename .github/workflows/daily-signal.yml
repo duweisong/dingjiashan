@@ -1,0 +1,48 @@
+name: Daily Signal V4.3.1
+
+on:
+  schedule:
+    # 15:30 Beijing time = 07:30 UTC (market close + 30min)
+    - cron: '30 7 * * 1-5'
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  run-signal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          pip install numpy pandas baostock
+      
+      - name: Create cache dir
+        run: mkdir -p .strategy_cache
+      
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: .strategy_cache
+          key: stock-cache-${{ github.run_id }}
+          restore-keys: |
+            stock-cache-
+      
+      - name: Run V4.3.1 Signal
+        run: python _v4_10stock_backtest.py
+      
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add daily_reports/
+          git diff --staged --quiet || (git commit -m "daily signal $(date +%Y-%m-%d) [auto]" && git push)
