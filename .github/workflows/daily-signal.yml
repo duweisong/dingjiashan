@@ -24,7 +24,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install numpy pandas baostock
+          pip install numpy pandas baostock requests
       
       - name: Create cache dir
         run: mkdir -p .strategy_cache
@@ -46,3 +46,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add daily_reports/
           git diff --staged --quiet || (git commit -m "daily signal $(date +%Y-%m-%d) [auto]" && git push)
+      - name: PushPlus
+        if: env.PUSHPLUS_TOKEN != ''
+        env:
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+        run: python -c "import requests,os;from pathlib import Path;rpt=Path('daily_reports/LATEST.md');c=rpt.read_text(encoding='utf-8');lines=c.split(chr(10));title=lines[0].lstrip('# ') if lines else 'Signal';body=chr(10).join(lines[:40]);r=requests.post('https://www.pushplus.plus/send',json={'token':os.environ['PUSHPLUS_TOKEN'],'title':title,'content':body,'template':'markdown'},timeout=15).json();print('[OK]' if r.get('code')==200 else f'[FAIL]')"
