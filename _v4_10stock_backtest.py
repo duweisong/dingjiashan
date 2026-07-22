@@ -393,7 +393,7 @@ for q in sorted(qtrs.keys()):
     print(f"  {q:<10} {qdays.get(q,0):>5} {qd['t']:>6} {wr:>5.1f}% {qd['pnl']:>+7.1f}% {ret:>+7.1f}% {bear_days:>6}")
 print(f"  {'-'*56}")
 total_bear_days = sum(1 for d in all_days if d['reg']==3)
-print(f"  {'TOTAL':<10} {len(all_days):>5} {total_sells:>6} {wr_all:>5.1f}% {total_pnl:>+7.1f}% {total_pnl/8:>+7.1f}% {total_bear_days:>6}")
+print(f"  {'TOTAL':<10} {len(all_days):>5} {len(sells):>6} {win_rate:>5.1f}% {sum(t['pnl'] for t in sells):>+7.1f}% {sum(t['pnl'] for t in sells)/8:>+7.1f}% {total_bear_days:>6}")
 print(f"  Bear filter: CSI300 < MA60 → no new buys. Total bear days: {total_bear_days}/{len(all_days)}")
 
 # Monthly

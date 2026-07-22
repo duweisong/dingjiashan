@@ -2,8 +2,8 @@ name: Daily Signal V4.3.1 (Auto-Data)
 
 on:
   schedule:
-    # 16:00 Beijing time = 08:00 UTC (market close + 60min, data ready)
-    - cron: '0 8 * * 1-5'
+    # 18:00 Beijing time = 10:00 UTC (market close + 3h, data fully settled)
+    - cron: '0 10 * * 1-5'
   workflow_dispatch:  # manual trigger
 
 jobs:
