@@ -10,23 +10,24 @@ from collections import Counter
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.strategy_cache')
 START = pd.Timestamp('2026-07-01')
 END = pd.Timestamp.now()  # Dynamic: today's date for daily run
-POS_STRONG = 10; POS_NEUTRAL = 8; POS_BEAR = 4
+POS_STRONG = 10; POS_NEUTRAL = 8; POS_BEAR = 2  # Bear: minimal exposure
 BEAR_MA = 120; MIN_AMT = 30_000_000; MIN_SCORE_BASE = 0.2
 COOL_OFF = 2
 MIN_HOLD = 1
 EMERGENCY_DROP = -0.08
-BEAR_FILTER = False  # Disabled: hurts recovery, bear params are better
+BEAR_FILTER = True   # Enabled: no new buys when CSI300 < MA60
 BEAR_FILTER_MA = 60  # Use 60-day MA for bear filter (faster than 120)
 SL_FLOOR = -0.05  # hard floor: never looser than -5%
 TIME_LOSER = 5     # exit if held this many days AND still losing
-MA20_CONSEC = 3    # consecutive days below MA20 before exit
+MA20_CONSEC = 3    # consecutive days below MA20 before exit (bull)
 
 FW = {'ret_5d':0.10,'ret_10d':0.10,'ret_20d':0.10,'vol_ratio':0.20,
       'price_vs_ma20':0.20,'ma_alignment':0.12,'up_days_10':0.05,
       'turnover':0.05,'atr_pct':-0.08}
 EX = {'atm_low':1.2,'atm_high':2.0,'max_hold':10,'tp_std':0.12,'tp_top':0.15,
-      'rank_out_ratio':0.75,'rank_drop':50,'sl_hard':-0.08,'sl_bear':-0.10,
-      'ma_p':20,'atr_sl_mult':2.5,'tp_bear':0.10}  # Bear: wider SL, tighter TP
+      'rank_out_ratio':0.75,'rank_drop':50,'sl_hard':-0.08,'sl_bear':-0.05,
+      'ma_p':20,'atr_sl_mult':2.5,'tp_bear':0.05,
+      'max_hold_bear':5, 'ma20_consec_bear':1}  # Bear: tight stop, quick profit, fast exit
 
 C = {}
 
@@ -242,7 +243,7 @@ else:
     for v in C.values(): dates=v['df']['date'].tolist();break
 td=[d for d in dates if START<=d<=END]
 print(f'Backtest:',td[0].date(),'~',td[-1].date(),f'({len(td)} days)')
-print('Optimizations: SL-8% | CoolOff=3d | Tiered TP(12-15%) | FlexTime(10-15d) | MinHold=2d | PropRank')
+print('BearV2: POS=2 | SL=-5% | TP=5% | MaxHold=5d | MA20x1 | BearFilter(MA60) | NoBuyInBear')
 
 pos={};all_days=[];trades=[]
 banned={}  # {code: ban_until_date}  cooling-off tracking
@@ -278,12 +279,15 @@ for i,dt in enumerate(td):
         p['ma20_cnt'] = p.get('ma20_cnt', 0) + 1 if below_ma20 else 0
 
         atm=EX['atm_high'] if ap>5 else ((EX['atm_low']+EX['atm_high'])/2 if ap>2.5 else EX['atm_low'])
-        # Bear uses uniform tight TP, bull uses tiered TP
+        # Bear vs Bull parameter selection
         if ib:
-            tp = EX['tp_bear']  # Bear: uniform 10%
+            tp = EX['tp_bear']             # Bear: quick 5% profit
+            max_hold = EX['max_hold_bear']  # Bear: 5 days max
+            ma20_limit = EX['ma20_consec_bear']  # Bear: 1 day below = exit
         else:
             tp = EX['tp_top'] if p.get('er',99) <= 3 else EX['tp_std']
-        max_hold = 15 if p.get('er',99) <= 5 else EX['max_hold']
+            max_hold = 15 if p.get('er',99) <= 5 else EX['max_hold']
+            ma20_limit = MA20_CONSEC
 
         go=False;reason=''
         if pf<=hard_sl: go=True;reason=f'SL({pf*100:.1f}%)'
@@ -292,7 +296,7 @@ for i,dt in enumerate(td):
             if pf>=tp: go=True;reason=f'TP({tp*100:.0f}%)'
             elif p['dh']>=max_hold: go=True;reason=f'TIME({p["dh"]}d)'
             elif p['dh']>=TIME_LOSER and pf<0 and p['hi']<=p['ep']: go=True;reason=f'TIME_LOSS({p["dh"]}d)'
-            elif p['ma20_cnt']>=MA20_CONSEC: go=True;reason=f'MA20x{MA20_CONSEC}'
+            elif p['ma20_cnt']>=ma20_limit: go=True;reason=f'MA20x{ma20_limit}'
             elif rk>total_stocks*EX['rank_out_ratio']: go=True;reason='RANK'
             elif rk-p.get('er',999)>EX['rank_drop']: go=True;reason='RANK_DROP'
             elif cl<p['hi']-atm*atr: go=True;reason='TRAIL'
@@ -378,7 +382,7 @@ win_rate = len(wins)/len(sells)*100 if sells else 0
 
 print(f'  DINGJIASHAN V4.3 FINAL (10-STOCK)')
 print(f'  Period: {START.date()} ~ {END.date()} | Days: {len(all_days)} | Avg Hold: {avg_h:.1f}/10')
-print(f'  V4.3 BearOpt: DynSL(-5%~-8%) | BearSL(-10%) | BearTP(10%) | Crash(8%) | CoolOff2d | MA20x3d | TimeLoss(5d)')
+print(f'  V4.3 BearV2: BullSL(-5~-8%) | BearSL(-5%) | BearTP(5%) | BearMaxHold(5d) | BearMA20x1 | BearFilter(MA60) | Crash(8%) | CoolOff2d')
 print(f'  Trades: {total_trades} ({len(buys)}B/{len(sells)}S) | WinRate: {win_rate:.1f}% | AvgWin: {avg_win:+.1f}% | AvgLoss: {avg_loss:+.1f}%')
 print('='*100)
 
